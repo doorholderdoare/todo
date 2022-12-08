@@ -29,4 +29,5 @@ pip install discord_webhook //this one isn't really used, if you want to impleme
 ## Authors
 
 - [ChatGPT](https://chat.openai.com/chat)
+- [DOARE](https://github.com/doorholderdoare)
 
