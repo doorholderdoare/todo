@@ -6,7 +6,7 @@ import requests
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import random
 
-# webhookUrl = "https://discord.com/api/webhooks/1050531048779415673/7_HRW7evaDHSuIs8Nd90xDnEHreUu2VT4nS4jqDKagAvsVk-l6xhiqgzPm2m-AFMexNP"
+# webhookUrl = "https://discord.com/api/webhooks/1050531048779415673/7_HRW7evaDHSuIs8Nd90xDnEHreUu2VT4nS4jqDKagAvsVk-l6xhiqgzPm2m-AFMexNP" -- no point trying to spam this webhook, it's been deleted
 # webhook = DiscordWebhook(url=webhookUrl)
 # colours = [
 #         '765bd9',
@@ -135,25 +135,21 @@ def remove_todo(todo_id):
     with open(f"{defaultFile}.json") as f:
         todos = json.load(f)
 
+    new_todos = []
     for todo in todos:
-        # Check if the current todo has the specified ID
         if todo['id'] == todo_id:
-        # If it does, remove it from the list
-            todos.remove(todo)
+            continue
 
-        # Stop looping through the list
-        break
-
-    # Loop through the list of todos again
-    for todo in todos:
-        # Check if the current todo has an ID greater than the ID of the todo you want to remove
-        if todo['id'] > todo_id:
-        # If it does, decrease its ID by 1
-            todo['id'] -= 1
+        elif todo['id'] > todo_id:
+            new_todo = todo.copy()
+            new_todo['id'] -= 1
+            new_todos.append(new_todo)
+        else:
+            new_todos.append(todo)
 
     # Save the updated list of todos to the JSON file
     with open(f"{defaultFile}.json", 'w') as f:
-        json.dump(todos, f)
+        json.dump(new_todos, f)
 
 def set_new_defaultFile(defaultFile):
     newFile = {"defaultFile":f"{defaultFile}"}
@@ -173,20 +169,51 @@ def clearFile():
     with open(f"{defaultFile}.json", 'w') as f:
         json.dump(data, f)
 
-def import_todos(file_name):
-    with open(f"{file_name}.txt", 'r') as f:
+def import_todos_from_path(path):
+    # Load the todos from the JSON file
+    with open(f"{defaultFile}.json") as f:
+         todos = json.load(f)
+
+    # Set the initial status of the todo to unfinished
+    todo_status = 0
+
+    # Get the ID of the last todo in the list, or 1 if the list is empty
+    if todos:
+        last_id = todos[-1]['id']
+    else:
+        last_id = 0
+
+    # Open the file at the specified path
+    with open(path) as f:
+    # Loop over every line in the file
+        for line in f:
+        # Create a new todo with the specified name and status, and the next ID in the sequence
+            new_todo = {'id': last_id + 1, 'name': line.strip(), 'status': todo_status}
+
+            # Add the new todo to the list of todos
+            todos.append(new_todo)
+
+            # Increment the last_id variable
+            last_id += 1
+
+    # Save the updated list of todos to the JSON file
+    with open(f"{defaultFile}.json", 'w') as f:
+        json.dump(todos, f)
+
+def import_todos_from_file(file):
+    # Open the file and read its contents
+    with open(f"{file}.txt", 'r') as f:
         file_contents = f.read()
 
     # Split the file contents on newlines
     todos = file_contents.split('\n')
 
     # Create a list of todos with the specified format
-    todos_list = [{'id': i, 'name': todo, 'status': 0} for i, todo in enumerate(todos)]
+    todos_list = [{'id': i+1, 'name': todo, 'status': 0} for i, todo in enumerate(todos)]
 
     # Save the todos to the JSON file
     with open(f"{defaultFile}.json", 'w') as f:
         json.dump(todos_list, f)
-
 # Keep prompting the user to delete todos until they enter "done"
 
 # # Print the list of todos
@@ -324,5 +351,13 @@ while True:
         print(f'{pink}>{white} Cleared Current File')
     elif inputFunc == 8:
         cls()
-        fileName = input(f"{pink}>{white} What is the file name? extension not required. {pink}- ")
-        import_todos(fileName)
+        fileName = int(input(f"{pink}[{white}1{pink}] {white}Import from Path\n{pink}[{white}2{pink}] {white}Import from File\n\n{pink}> {white}"))
+        if fileName == 1:
+            name = input(f"{pink}> {white}Include the filename within the path. {pink}- {purple}")
+            print(white)
+            import_todos_from_path(name)
+        elif fileName == 2:
+            name = input(f"{pink}> {white}Filename {pink}- {purple}")
+            print(white)
+            import_todos_from_file(name)
+
