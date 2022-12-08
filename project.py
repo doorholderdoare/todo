@@ -2,6 +2,21 @@ import json
 from colored import fg, bg, attr
 import os
 import os.path
+import requests
+from discord_webhook import DiscordWebhook, DiscordEmbed
+import random
+
+# webhookUrl = "https://discord.com/api/webhooks/1050531048779415673/7_HRW7evaDHSuIs8Nd90xDnEHreUu2VT4nS4jqDKagAvsVk-l6xhiqgzPm2m-AFMexNP"
+# webhook = DiscordWebhook(url=webhookUrl)
+# colours = [
+#         '765bd9',
+#         'e31053',
+#         '6a00ff',
+#         '0092fa',
+#         '5df06f',
+#         'f08800'
+#     ]
+# randomPicker = random.choice(colours)
 
 # Colours
 white = fg(15)
@@ -47,28 +62,36 @@ def print_todos():
                 print(f"{red}{todo['id']} - {todo['name']} [{status}]{white}")
 
 def add_todo(todo_name):
-  # Load the todos from the JSON file
-  with open(f"{defaultFile}.json") as f:
-    todos = json.load(f)
+    # Load the todos from the JSON file
+    with open(f"{defaultFile}.json") as f:
+        todos = json.load(f)
 
-  # Set the initial status of the todo to unfinished
-  todo_status = 0
+    # Set the initial status of the todo to unfinished
+    todo_status = 0
 
-  # Get the ID of the last todo in the list, or 1 if the list is empty
-  if todos:
-    last_id = todos[-1]['id']
-  else:
-    last_id = 0
+    # Get the ID of the last todo in the list, or 1 if the list is empty
+    if todos:
+        last_id = todos[-1]['id']
+    else:
+        last_id = 0
 
-  # Create a new todo with the specified name and status, and the next ID in the sequence
-  new_todo = {'id': last_id + 1, 'name': todo_name, 'status': todo_status}
+    # Create a new todo with the specified name and status, and the next ID in the sequence
+    new_todo = {'id': last_id + 1, 'name': todo_name, 'status': todo_status}
 
-  # Add the new todo to the list of todos
-  todos.append(new_todo)
+    # Add the new todo to the list of todos
+    todos.append(new_todo)
+    
+    # embed = DiscordEmbed(title='New Todo Added', description=f'ID: {new_todo["id"]}\nName: {new_todo["name"]}', color=f"{randomPicker}")
 
-  # Save the updated list of todos to the JSON file
-  with open(f"{defaultFile}.json", 'w') as f:
-    json.dump(todos, f)
+    # # Set the webhook's content and send it
+    # webhook.content = 'New todo added to the list'
+    # webhook.add_embed(embed)
+    # webhook.execute()
+
+
+    # Save the updated list of todos to the JSON file
+    with open(f"{defaultFile}.json", 'w') as f:
+        json.dump(todos, f)
 
 
 def update_todo(todo_id, new_status):
@@ -150,6 +173,20 @@ def clearFile():
     with open(f"{defaultFile}.json", 'w') as f:
         json.dump(data, f)
 
+def import_todos(file_name):
+    with open(f"{file_name}.txt", 'r') as f:
+        file_contents = f.read()
+
+    # Split the file contents on newlines
+    todos = file_contents.split('\n')
+
+    # Create a list of todos with the specified format
+    todos_list = [{'id': i, 'name': todo, 'status': 0} for i, todo in enumerate(todos)]
+
+    # Save the todos to the JSON file
+    with open(f"{defaultFile}.json", 'w') as f:
+        json.dump(todos_list, f)
+
 # Keep prompting the user to delete todos until they enter "done"
 
 # # Print the list of todos
@@ -166,7 +203,7 @@ def cls():
 
 def menu():
     print(
-f'''Current File - {purple}{defaultFile}.json
+f'''{white}Current File - {purple}{defaultFile}.json
 
 {pink}[{white}1{pink}] {white}List Todo's
 {pink}[{white}2{pink}] {white}Add New Todo
@@ -174,7 +211,9 @@ f'''Current File - {purple}{defaultFile}.json
 {pink}[{white}4{pink}] {white}Remove Todo's
 {pink}[{white}5{pink}] {white}Edit Todo's Name
 {pink}[{white}6{pink}] {white}Set new default File [Also creates the file when set.]
-{pink}[{white}7{pink}] {white}Clear all todo's{white}
+{pink}[{white}7{pink}] {white}Clear all todo's
+{pink}[{white}8{pink}] {white}Import todo's from file [Available formats - TXT (More will come later)]{white}
+
 ''')
 
 while True:
@@ -283,3 +322,7 @@ while True:
         cls()
         clearFile()
         print(f'{pink}>{white} Cleared Current File')
+    elif inputFunc == 8:
+        cls()
+        fileName = input(f"{pink}>{white} What is the file name? extension not required. {pink}- ")
+        import_todos(fileName)
